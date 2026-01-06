@@ -12,3 +12,5 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "uvicorn[standard]>=0.40.0",
 ]
+[tool.ruff.lint]
+select = ["I"]  # Enables isort-like import sorting
