@@ -11,3 +11,6 @@
 
 # Dotenv environment variables file
 **/.env
+
+# Other project files
+**/*.db
