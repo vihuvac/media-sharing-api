@@ -1,4 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query, status
+
+from app.schemas import PostCreate, PostResponse
 
 app = FastAPI()
 
@@ -47,15 +49,51 @@ text_posts = {
 }
 
 
-@app.get("/posts")
-def get_posts(limit: int = 10):
-    if limit:
-        return list(text_posts.values())[:limit]
+@app.get(
+    "/posts",
+    response_model=list[PostResponse],
+    summary="Get a list of posts",
+    tags=["Posts"],
+)
+def get_posts(
+    limit: int = Query(
+        10,
+        ge=1,
+        le=100,
+        description="Maximum number of posts to return.",
+    ),
+) -> list[PostResponse]:
+    return [PostResponse(**post) for post in list(text_posts.values())[:limit]]
 
-    return text_posts
+
+@app.post(
+    "/posts",
+    response_model=PostResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new post.",
+    tags=["Posts"],
+)
+def create_post(post: PostCreate) -> PostResponse:
+    new_post = PostResponse(
+        title=post.title,
+        content=post.content,
+    )
+    text_posts[max(text_posts.keys()) + 1] = new_post.model_dump()
+    return new_post
 
 
-@app.get("/posts/{id}")
+@app.get(
+    "/posts/{id}",
+    response_model=PostResponse,
+    summary="Get a post by ID.",
+    tags=["Posts"],
+    responses={
+        404: {
+            "description": "Post not found",
+            "content": {"application/json": {"example": {"detail": "Post not found."}}},
+        }
+    },
+)
 def get_post(id: int):
     if id not in text_posts:
         raise HTTPException(status_code=404, detail="Post not found.")
